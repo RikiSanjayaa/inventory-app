@@ -14,3 +14,15 @@ class ItemOut(ItemCreate):
 
     class Config:
         from_attributes = True
+
+class ItemJoinedOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    quantity: int
+    price: float
+    category_name: str
+    supplier_name: str
+    
+    class Config:
+        from_attributes = True

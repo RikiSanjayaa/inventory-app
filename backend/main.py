@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from models.enum import Role
+from models.enum_items import Role
 from database.db import engine, get_db
 from typing import Annotated
 from sqlalchemy.orm import Session

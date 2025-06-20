@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/dashboard_screen.dart';
+import 'package:frontend/screens/page_manager.dart';
 import 'package:frontend/screens/register_screen.dart';
 import 'screens/login_screen.dart';
 
@@ -10,7 +10,7 @@ void main() => runApp(
         routes: {
           '/': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/dashboard': (context) => const DashboardScreen(),
+          '/dashboard': (context) => const PageManager(),
         },
       ),
     );

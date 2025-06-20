@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from models.db_schema import Item as ItemModel
-from schemas.item import ItemCreate, ItemOut
+from models.db_schema import Category as CategoryModel
+from models.db_schema import Supplier as SupplierModel
+from schemas.item import ItemCreate, ItemOut, ItemJoinedOut
 from database.db import get_db
 from routes.auth import get_current_user
 from models.enum_items import Role
@@ -13,9 +15,23 @@ router = APIRouter()
 db_dependency = Depends(get_db)
 user_dependency = Depends(get_current_user)
 
-@router.get("/", response_model=List[ItemOut])
+@router.get("/", response_model=List[ItemJoinedOut])
 async def get_items(db: Session = db_dependency, user: dict = user_dependency):
-    return db.query(ItemModel).all()
+    items = db.query(
+        ItemModel.id,
+        ItemModel.name,
+        ItemModel.description,
+        ItemModel.quantity,
+        ItemModel.price,
+        CategoryModel.name.label("category_name"),
+        SupplierModel.name.label("supplier_name"),
+    ).join(
+        CategoryModel, ItemModel.category_id == CategoryModel.id
+    ).join(
+        SupplierModel, ItemModel.supplier_id == SupplierModel.id
+    ).all()
+    
+    return items
 
 @router.post("/", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 async def create_item(item: ItemCreate, db: Session = db_dependency, user: dict = user_dependency):
