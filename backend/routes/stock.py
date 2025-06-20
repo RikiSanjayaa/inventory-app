@@ -5,7 +5,7 @@ from models.db_schema import Stock as StockModel
 from schemas.stock import StockCreate, StockOut
 from database.db import get_db
 from routes.auth import get_current_user
-from models.enum import Role
+from models.enum_items import Role
 from utils.check_role import check_role
 
 router = APIRouter()

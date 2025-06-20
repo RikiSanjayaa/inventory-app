@@ -1,7 +1,7 @@
 # used for request/response validation and serialization
 from typing import Optional
 from pydantic import BaseModel
-from models.enum import Role
+from models.enum_items import Role
 
 class CreateUserRequest(BaseModel):
   username: str

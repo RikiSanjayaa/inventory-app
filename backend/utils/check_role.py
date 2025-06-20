@@ -1,6 +1,6 @@
 from fastapi import status, HTTPException, Depends
 from functools import wraps
-from models.enum import Role
+from models.enum_items import Role
 from typing import Annotated
 import routes.auth as auth
 

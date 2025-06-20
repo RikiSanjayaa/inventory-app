@@ -5,7 +5,7 @@ from models.db_schema import Category as CategoryModel
 from schemas.category import CategoryCreate, CategoryOut
 from database.db import get_db
 from routes.auth import get_current_user
-from models.enum import Role
+from models.enum_items import Role
 from utils.check_role import check_role
 
 router = APIRouter()

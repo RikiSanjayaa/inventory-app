@@ -5,7 +5,7 @@ from models.db_schema import Supplier as SupplierModel
 from schemas.supplier import SupplierCreate, SupplierOut
 from database.db import get_db
 from routes.auth import get_current_user
-from models.enum import Role
+from models.enum_items import Role
 from utils.check_role import check_role
 
 router = APIRouter()
