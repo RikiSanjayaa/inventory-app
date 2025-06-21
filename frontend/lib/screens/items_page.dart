@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/widgets/data_table_widget.dart';
 import 'package:frontend/widgets/edit_item.dart';
-import 'package:frontend/widgets/filter.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/items.dart';
 
@@ -107,119 +107,105 @@ class _ItemsPageState extends State<ItemsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const SizedBox(width: 200),
-              const Text("Filters:",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(width: 60),
-              FilterDropdown(
-                hint: "Category",
-                value: selectedCategory,
-                items: categories,
-                onChanged: (value) {
-                  setState(() {
-                    selectedCategory = value;
-                    _applyFilters();
-                  });
-                },
-              ),
-              const SizedBox(width: 16),
-              FilterDropdown(
-                hint: "Supplier",
-                value: selectedSupplier,
-                items: suppliers,
-                onChanged: (value) {
-                  setState(() {
-                    selectedSupplier = value;
-                    _applyFilters();
-                  });
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: DataTable(
-                sortColumnIndex: _sortColumnIndex,
-                sortAscending: _isAscending,
-                columns: [
-                  DataColumn(
-                      label: const Text('Name',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18)),
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          _sortColumnIndex = columnIndex;
-                          _isAscending = ascending;
-                          filteredItems.sort((a, b) =>
-                              _compareString(ascending, a.name, b.name));
-                        });
-                      }),
-                  DataColumn(
-                      label: const Text('Quantity',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18)),
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          _sortColumnIndex = columnIndex;
-                          _isAscending = ascending;
-                          filteredItems.sort((a, b) =>
-                              _compareNum(ascending, a.quantity, b.quantity));
-                        });
-                      }),
-                  DataColumn(
-                      label: const Text('Price',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18)),
-                      onSort: (columnIndex, ascending) {
-                        setState(() {
-                          _sortColumnIndex = columnIndex;
-                          _isAscending = ascending;
-                          filteredItems.sort((a, b) =>
-                              _compareNum(ascending, a.price, b.price));
-                        });
-                      }),
-                  const DataColumn(
-                      label: Text('Category',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18))),
-                  const DataColumn(
-                      label: Text('Supplier',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18))),
-                  const DataColumn(
-                      label: Text('Actions',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18))),
-                ],
-                rows: filteredItems.map((item) {
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(item.name)),
-                      DataCell(Text(item.quantity.toString())),
-                      DataCell(Text('\$${item.price}')),
-                      DataCell(Text(item.categoryName)),
-                      DataCell(Text(item.supplierName)),
-                      DataCell(EditItemBtn(
-                        item: item,
-                        fetchItems: fetchItems,
-                        categories: categories,
-                        suppliers: suppliers,
-                      )),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
+    final filtersList = [
+      {
+        'type': 'dropdown',
+        'hint': 'Category',
+        'key': 'category',
+        'items': categories,
+      },
+      {
+        'type': 'dropdown',
+        'hint': 'Supplier',
+        'key': 'supplier',
+        'items': suppliers,
+      },
+    ];
+
+    return DataTableWidget(
+      filters: filtersList,
+      selectedFilters: {
+        'category': selectedCategory,
+        'supplier': selectedSupplier,
+      },
+      onFilterChanged: (key, value) {
+        setState(() {
+          if (key == 'category') {
+            selectedCategory = value;
+          } else if (key == 'supplier') {
+            selectedSupplier = value;
+          }
+          _applyFilters();
+        });
+      },
+      sortColumnIndex: _sortColumnIndex,
+      sortAscending: _isAscending,
+      onSort: (columnIndex, ascending) {
+        setState(() {
+          _sortColumnIndex = columnIndex;
+          _isAscending = ascending;
+          switch (columnIndex) {
+            case 0:
+              filteredItems
+                  .sort((a, b) => _compareString(ascending, a.name, b.name));
+            case 1:
+              filteredItems.sort(
+                  (a, b) => _compareNum(ascending, a.quantity, b.quantity));
+            case 2:
+              filteredItems
+                  .sort((a, b) => _compareNum(ascending, a.price, b.price));
+            case 3:
+              filteredItems.sort((a, b) =>
+                  _compareString(ascending, a.categoryName, b.categoryName));
+            case 4:
+              filteredItems.sort((a, b) =>
+                  _compareString(ascending, a.supplierName, b.supplierName));
+          }
+        });
+      },
+      columns: const [
+        DataColumn(
+          label: Text('Name',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Quantity',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Price',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Category',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Supplier',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Actions',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+      ],
+      rows: filteredItems.map((item) {
+        return DataRow(
+          cells: [
+            DataCell(Text(item.name)),
+            DataCell(Text(item.quantity.toString())),
+            DataCell(Text('\$${item.price}')),
+            DataCell(Text(item.categoryName)),
+            DataCell(Text(item.supplierName)),
+            DataCell(EditItemBtn(
+              item: item,
+              fetchItems: fetchItems,
+              categories: categories,
+              suppliers: suppliers,
+            )),
+          ],
+        );
+      }).toList(),
     );
   }
 }

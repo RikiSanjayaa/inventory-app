@@ -12,6 +12,7 @@ import routes.items as items
 import routes.categories as categories
 import routes.suppliers as suppliers
 import routes.stock as stock
+import routes.users as users
 
 app = FastAPI()
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -19,6 +20,7 @@ app.include_router(items.router, prefix="/items", tags=["Items"])
 app.include_router(categories.router, prefix="/categories", tags=["Categories"])
 app.include_router(suppliers.router, prefix="/suppliers", tags=["Suppliers"])
 app.include_router(stock.router, prefix="/stock", tags=["Stock"])
+app.include_router(users.router, prefix="/users", tags=["Users"])
 app.add_middleware(
   CORSMiddleware,
   allow_origins=["*"],

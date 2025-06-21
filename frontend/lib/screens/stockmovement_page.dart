@@ -1,8 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/models/stocks.dart';
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/widgets/data_table_widget.dart';
+import 'package:frontend/widgets/edit_stock.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -16,11 +17,69 @@ class StockMovementsPage extends StatefulWidget {
 class _StockMovementsPageState extends State<StockMovementsPage> {
   List<Stock> stocks = [];
   bool isLoading = true;
+  int _sortColumnIndex = 0;
+  bool _isAscending = true;
+
+  List<Stock> allStocks = [];
+  List<Stock> filteredStocks = [];
+
+  List<Map<String, dynamic>> users = [];
+  List<Map<String, dynamic>> items = [];
+
+  String? selectedUser;
+  String? selectedItem;
+  String? selectedMovementType;
+
+  Future<void> fetchDropdownOptions() async {
+    final token = await AuthService.getToken();
+    final itemsResponse = await http.get(
+      Uri.parse("http://127.0.0.1:8000/items/"),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    final usersResponse = await http.get(
+      Uri.parse("http://127.0.0.1:8000/users/"),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (itemsResponse.statusCode == 200 && usersResponse.statusCode == 200) {
+      final List<dynamic> usersJson = jsonDecode(usersResponse.body);
+      final List<dynamic> itemsJson = jsonDecode(itemsResponse.body);
+      setState(() {
+        users = usersJson
+            .map((user) => {
+                  'id': user['id'],
+                  'name': user['username'],
+                })
+            .toList();
+        items = itemsJson
+            .map((item) => {
+                  'id': item['id'],
+                  'name': item['name'],
+                })
+            .toList();
+      });
+    }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      filteredStocks = allStocks.where((stock) {
+        final matchesUser =
+            selectedUser == null || stock.username == selectedUser;
+        final matchesItem =
+            selectedItem == null || stock.itemName == selectedItem;
+        final matchesType = selectedMovementType == null ||
+            stock.movementType.toLowerCase() == selectedMovementType;
+        return matchesUser && matchesItem && matchesType;
+      }).toList();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     fetchItems();
+    fetchDropdownOptions();
     // TODO: create stock movement, delete stock movement
   }
 
@@ -35,6 +94,8 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
       final List<dynamic> jsonList = jsonDecode(response.body);
       setState(() {
         stocks = jsonList.map((json) => Stock.fromJson(json)).toList();
+        allStocks = stocks;
+        filteredStocks = List.from(allStocks);
         isLoading = false;
       });
     } else {
@@ -42,61 +103,144 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
     }
   }
 
+  int _compareString(bool ascending, String value1, String value2) =>
+      ascending ? value1.compareTo(value2) : value2.compareTo(value1);
+
+  int _compareNum<T extends num>(bool ascending, T value1, T value2) =>
+      ascending ? value1.compareTo(value2) : value2.compareTo(value1);
+
+  int _compareDateTime(bool ascending, DateTime value1, DateTime value2) =>
+      ascending ? value1.compareTo(value2) : value2.compareTo(value1);
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: DataTable(
-        columns: const [
-          DataColumn(
-              label: Text(
-            'Item',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          )),
-          DataColumn(
-              label: Text(
-            'User',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          )),
-          DataColumn(
-              label: Text(
-            'Quantity',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          )),
-          DataColumn(
-              label: Text(
-            'Type',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          )),
-          DataColumn(
-              label: Text(
-            'Timestamp',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          )),
-        ],
-        rows: stocks.map((stock) {
-          return DataRow(
-            // TODO: Filter by everything (user dropdown)
-            cells: [
-              DataCell(Text(stock.itemName)),
-              DataCell(Text(stock.username)),
-              DataCell(Text('${stock.quantity}')),
-              DataCell(Icon(
-                stock.movementType.toLowerCase() == 'in'
-                    ? Icons.arrow_downward
-                    : Icons.arrow_upward,
-                color: stock.movementType.toLowerCase() == 'in'
-                    ? Colors.green
-                    : Colors.red,
-              )),
-              DataCell(
-                Text(
-                  DateFormat('MMM d, y HH:mm').format(stock.timestamp),
-                ),
+    final filtersList = [
+      {
+        'type': 'dropdown',
+        'hint': 'Item',
+        'key': 'item',
+        'items': items,
+      },
+      {
+        'type': 'dropdown',
+        'hint': 'User',
+        'key': 'user',
+        'items': users,
+      },
+      {
+        'type': 'custom',
+        'widget': DropdownButton<String>(
+          hint: const Text('Movement Type'),
+          value: selectedMovementType,
+          items: const [
+            DropdownMenuItem(value: null, child: Text('All Types')),
+            DropdownMenuItem(value: 'in', child: Text('In')),
+            DropdownMenuItem(value: 'out', child: Text('Out')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              selectedMovementType = value;
+              _applyFilters();
+            });
+          },
+        ),
+      },
+    ];
+
+    return DataTableWidget(
+      filters: filtersList,
+      selectedFilters: {
+        'item': selectedItem,
+        'user': selectedUser,
+      },
+      onFilterChanged: (key, value) {
+        setState(() {
+          if (key == 'item') {
+            selectedItem = value;
+          } else if (key == 'user') {
+            selectedUser = value;
+          }
+          _applyFilters();
+        });
+      },
+      sortColumnIndex: _sortColumnIndex,
+      sortAscending: _isAscending,
+      onSort: (columnIndex, ascending) {
+        setState(() {
+          _sortColumnIndex = columnIndex;
+          _isAscending = ascending;
+          switch (columnIndex) {
+            case 0:
+              filteredStocks.sort(
+                  (a, b) => _compareString(ascending, a.itemName, b.itemName));
+            case 1:
+              filteredStocks.sort(
+                  (a, b) => _compareString(ascending, a.username, b.username));
+            case 2:
+              filteredStocks.sort(
+                  (a, b) => _compareNum(ascending, a.quantity, b.quantity));
+            case 3:
+              filteredStocks.sort((a, b) =>
+                  _compareString(ascending, a.movementType, b.movementType));
+            case 4:
+              filteredStocks.sort((a, b) =>
+                  _compareDateTime(ascending, a.timestamp, b.timestamp));
+          }
+        });
+      },
+      columns: const [
+        DataColumn(
+          label: Text('Item',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('User',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Quantity',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Type',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Timestamp',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+        DataColumn(
+          label: Text('Actions',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+      ],
+      rows: filteredStocks.map((stock) {
+        return DataRow(
+          cells: [
+            DataCell(Text(stock.itemName)),
+            DataCell(Text(stock.username)),
+            DataCell(Text('${stock.quantity}')),
+            DataCell(Icon(
+              stock.movementType.toLowerCase() == 'in'
+                  ? Icons.arrow_downward
+                  : Icons.arrow_upward,
+              color: stock.movementType.toLowerCase() == 'in'
+                  ? Colors.green
+                  : Colors.red,
+            )),
+            DataCell(
+              Text(
+                DateFormat('MMM d, y HH:mm').format(stock.timestamp),
               ),
-            ],
-          );
-        }).toList(),
-      ),
+            ),
+            DataCell(EditStockBtn(
+              stock: stock,
+              fetchStocks: fetchItems,
+              items: items,
+            )),
+          ],
+        );
+      }).toList(),
     );
   }
 }
