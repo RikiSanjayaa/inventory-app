@@ -1,7 +1,7 @@
 from enum import Enum
 
 class Role(str, Enum):
-    USER = "general-user"
+    GENERAL_USER = "general-user"
     ADMIN = "admin"
     
 class MovementType(str, Enum):

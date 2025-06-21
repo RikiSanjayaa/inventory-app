@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from models.db_schema import Stock as StockModel
+from models.db_schema import Item as ItemModel
+from models.db_schema import Users as UserModel
 from schemas.stock import StockCreate, StockOut
 from database.db import get_db
 from routes.auth import get_current_user
@@ -15,7 +17,22 @@ user_dependency = Depends(get_current_user)
 
 @router.get("/", response_model=List[StockOut])
 async def get_stock_entries(db: Session = db_dependency, user: dict = user_dependency):
-    return db.query(StockModel).all()
+    stocks = db.query(
+        StockModel.id,
+        StockModel.item_id,
+        StockModel.user_id,
+        StockModel.quantity,
+        StockModel.movement_type,
+        StockModel.timestamp,
+        ItemModel.name.label("item_name"),
+        UserModel.username.label("username"),
+    ).join(
+        ItemModel, StockModel.item_id == ItemModel.id
+    ).join(
+        UserModel, StockModel.user_id == UserModel.id
+    ).all()
+    
+    return stocks
 
 @router.post("/", response_model=StockOut, status_code=status.HTTP_201_CREATED)
 @check_role([Role.ADMIN])

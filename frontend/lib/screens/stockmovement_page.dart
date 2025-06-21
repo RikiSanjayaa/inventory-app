@@ -1,52 +1,98 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class StockMovementsPage extends StatelessWidget {
-  StockMovementsPage({super.key});
-  // TODO: connect this page with actual data from "stock_movements" table
-  final List<Map<String, dynamic>> movements = [
-    {
-      'item': 'LED Lamp',
-      'user': 'admin',
-      'quantity': 10,
-      'type': 'IN',
-      'timestamp': '2025-06-19 08:30'
-    },
-    {
-      'item': 'Office Chair',
-      'user': 'riki',
-      'quantity': -5,
-      'type': 'OUT',
-      'timestamp': '2025-06-19 09:45'
-    },
-    {
-      'item': 'Flip Chart',
-      'user': 'admin',
-      'quantity': 3,
-      'type': 'IN',
-      'timestamp': '2025-06-18 15:10'
-    },
-  ];
+import 'package:flutter/material.dart';
+import 'package:frontend/models/stocks.dart';
+import 'package:frontend/services/auth_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
+class StockMovementsPage extends StatefulWidget {
+  const StockMovementsPage({super.key});
+
+  @override
+  State<StockMovementsPage> createState() => _StockMovementsPageState();
+}
+
+class _StockMovementsPageState extends State<StockMovementsPage> {
+  List<Stock> stocks = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchItems();
+    // TODO: create stock movement, delete stock movement
+  }
+
+  Future<void> fetchItems() async {
+    final token = await AuthService.getToken();
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/stock/'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      setState(() {
+        stocks = jsonList.map((json) => Stock.fromJson(json)).toList();
+        isLoading = false;
+      });
+    } else {
+      throw Exception('Failed to load items: ${response.statusCode}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
       child: DataTable(
         columns: const [
-          DataColumn(label: Text('Item')),
-          DataColumn(label: Text('User')),
-          DataColumn(label: Text('Quantity')),
-          DataColumn(label: Text('Type')),
-          DataColumn(label: Text('Timestamp')),
+          DataColumn(
+              label: Text(
+            'Item',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          )),
+          DataColumn(
+              label: Text(
+            'User',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          )),
+          DataColumn(
+              label: Text(
+            'Quantity',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          )),
+          DataColumn(
+              label: Text(
+            'Type',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          )),
+          DataColumn(
+              label: Text(
+            'Timestamp',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          )),
         ],
-        rows: movements.map((m) {
+        rows: stocks.map((stock) {
           return DataRow(
+            // TODO: Filter by everything (user dropdown)
             cells: [
-              DataCell(Text(m['item'])),
-              DataCell(Text(m['user'])),
-              DataCell(Text('${m['quantity']}')),
-              DataCell(Text(m['type'])),
-              DataCell(Text(m['timestamp'])),
+              DataCell(Text(stock.itemName)),
+              DataCell(Text(stock.username)),
+              DataCell(Text('${stock.quantity}')),
+              DataCell(Icon(
+                stock.movementType.toLowerCase() == 'in'
+                    ? Icons.arrow_downward
+                    : Icons.arrow_upward,
+                color: stock.movementType.toLowerCase() == 'in'
+                    ? Colors.green
+                    : Colors.red,
+              )),
+              DataCell(
+                Text(
+                  DateFormat('MMM d, y HH:mm').format(stock.timestamp),
+                ),
+              ),
             ],
           );
         }).toList(),

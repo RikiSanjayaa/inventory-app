@@ -26,7 +26,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
   if create_user_request.role is None:
-    role = Role.USER.value
+    role = Role.GENERAL_USER.value
   else:
     role = create_user_request.role
   create_user_model = Users(

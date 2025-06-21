@@ -70,17 +70,17 @@ db.commit()
 
 # Stock Movements
 movements = [
-    Stock(item_id=1, user_id=1, quantity=10, movement_type="IN", timestamp=datetime.now()),
-    Stock(item_id=2, user_id=2, quantity=5, movement_type="OUT", timestamp=datetime.now()),
-    Stock(item_id=3, user_id=2, quantity=20, movement_type="IN", timestamp=datetime.now()),
-    Stock(item_id=4, user_id=1, quantity=7, movement_type="OUT", timestamp=datetime.now()),
-    Stock(item_id=5, user_id=1, quantity=15, movement_type="IN", timestamp=datetime.now()),
-    Stock(item_id=6, user_id=2, quantity=2, movement_type="OUT", timestamp=datetime.now()),
-    Stock(item_id=7, user_id=2, quantity=50, movement_type="IN", timestamp=datetime.now()),
-    Stock(item_id=8, user_id=1, quantity=6, movement_type="OUT", timestamp=datetime.now()),
-    Stock(item_id=9, user_id=1, quantity=3, movement_type="OUT", timestamp=datetime.now()),
-    Stock(item_id=10, user_id=2, quantity=25, movement_type="IN", timestamp=datetime.now()),
-    Stock(item_id=11, user_id=1, quantity=100, movement_type="IN", timestamp=datetime.now())
+    Stock(item_id=1, user_id=1, quantity=10, movement_type="in", timestamp=datetime.now()),
+    Stock(item_id=2, user_id=2, quantity=5, movement_type="out", timestamp=datetime.now()),
+    Stock(item_id=3, user_id=2, quantity=20, movement_type="in", timestamp=datetime.now()),
+    Stock(item_id=4, user_id=1, quantity=7, movement_type="out", timestamp=datetime.now()),
+    Stock(item_id=5, user_id=1, quantity=15, movement_type="in", timestamp=datetime.now()),
+    Stock(item_id=6, user_id=2, quantity=2, movement_type="out", timestamp=datetime.now()),
+    Stock(item_id=7, user_id=2, quantity=50, movement_type="in", timestamp=datetime.now()),
+    Stock(item_id=8, user_id=1, quantity=6, movement_type="out", timestamp=datetime.now()),
+    Stock(item_id=9, user_id=1, quantity=3, movement_type="out", timestamp=datetime.now()),
+    Stock(item_id=10, user_id=2, quantity=25, movement_type="in", timestamp=datetime.now()),
+    Stock(item_id=11, user_id=1, quantity=100, movement_type="in", timestamp=datetime.now())
 ]
 db.add_all(movements)
 db.commit()

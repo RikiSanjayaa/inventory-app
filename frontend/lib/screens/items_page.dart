@@ -96,6 +96,7 @@ class _ItemsPageState extends State<ItemsPage> {
     super.initState();
     fetchDropdownOptions();
     fetchItems();
+    // TODO: create item button
   }
 
   int _compareString(bool ascending, String value1, String value2) =>
@@ -143,7 +144,6 @@ class _ItemsPageState extends State<ItemsPage> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            // TODO: create item functionality
             child: SingleChildScrollView(
               child: DataTable(
                 sortColumnIndex: _sortColumnIndex,

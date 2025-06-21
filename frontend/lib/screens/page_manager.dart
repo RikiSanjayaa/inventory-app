@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/items_page.dart';
 import 'package:frontend/screens/stockmovement_page.dart';
+import 'package:frontend/services/auth_service.dart';
 
 class PageManager extends StatefulWidget {
   const PageManager({super.key});
@@ -14,7 +15,7 @@ class _PageManagerState extends State<PageManager> {
 
   final List<Widget> _pages = [
     const ItemsPage(),
-    StockMovementsPage(),
+    const StockMovementsPage(),
     // TODO: Users page
     // TODO: Admin page (to create categories and suppliers)
   ];
@@ -24,6 +25,39 @@ class _PageManagerState extends State<PageManager> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory Management'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              // Show confirmation dialog
+              final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldLogout == true && context.mounted) {
+                await AuthService.logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushReplacementNamed('/login');
+                }
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
