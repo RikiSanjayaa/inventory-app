@@ -27,8 +27,8 @@ db.query(Users).delete()
 
 # Users
 users = [
-    Users(username="admin", hashed_password=bcrypt.hash("admin123"), role="admin"),
-    Users(username="johndoe", hashed_password=bcrypt.hash("password"), role="general-user")
+    Users(username="admin", hashed_password=bcrypt.hash("admin123"), role="admin", is_active=True),
+    Users(username="johndoe", hashed_password=bcrypt.hash("password"), role="general-user", is_active=True)
 ]
 db.add_all(users)
 db.commit()

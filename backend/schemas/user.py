@@ -7,6 +7,7 @@ class CreateUserRequest(BaseModel):
   username: str
   password: str
   role: Optional[Role] = None
+  is_active: bool = True
   
   model_config = {
     "json_schema_extra": {
@@ -33,6 +34,14 @@ class Token(BaseModel):
 class UserOut(BaseModel):
   id: int
   username: str
+  role: str
+  is_active: bool
   
   class Config:
         from_attributes = True
+        
+class UserRoleUpdate(BaseModel):
+    role: str
+
+class UserStatusUpdate(BaseModel):
+    is_active: bool

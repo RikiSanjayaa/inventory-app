@@ -14,14 +14,34 @@ class _LoginScreenState extends State<LoginScreen> {
   String error = '';
 
   void login() async {
-    bool success = await AuthService.login(
+    final loginResult = await AuthService.login(
       usernameController.text,
       passwordController.text,
     );
-    if (success) {
+
+    if (loginResult['success'] == true) {
       if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
-      setState(() => error = 'Login failed');
+      if (loginResult['error'] == 'Account is disabled.') {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) => AlertDialog(
+              title: const Text('Account Disabled'),
+              content: const Text(
+                  'This account has been disabled. Please contact an administrator.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        setState(() => error = loginResult['error'] ?? 'Login failed');
+      }
     }
   }
 

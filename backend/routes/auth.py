@@ -32,7 +32,8 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
   create_user_model = Users(
     username=create_user_request.username,
     hashed_password=bcrypt_context.hash(create_user_request.password),
-    role=role
+    role=role,
+    is_active=True,
   )
   db.add(create_user_model)
   db.commit()
@@ -41,9 +42,24 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
   user = authenticate_user(form_data.username, form_data.password, db)
   if not user:
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+      raise HTTPException(
+          status_code=status.HTTP_401_UNAUTHORIZED,
+          detail='Could not validate user.'
+      )
   
-  token = create_access_token(user.username, user.id, user.role, timedelta(minutes=20))
+  # Check if user is active
+  if not user.is_active:
+      raise HTTPException(
+          status_code=status.HTTP_401_UNAUTHORIZED,
+          detail='Account is disabled.'
+      )
+  
+  token = create_access_token(
+      user.username,
+      user.id,
+      user.role,
+      timedelta(minutes=20)
+  )
   
   return {'access_token': token, 'token_type': 'bearer'}
 
@@ -63,14 +79,38 @@ def create_access_token(username: str, user_id: int, role: str, expires_delta: t
   encode.update({'exp': expires})
   return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
-  try:
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    username: str = payload.get('sub')
-    user_id: int = payload.get('id')
-    user_role: str = payload.get('role')
-    if username is None or user_id is None:
-      raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
-    return {'username': username, 'id': user_id, 'role': user_role}
-  except JWTError:
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_bearer)],
+    db: Annotated[Session, Depends(get_db)]
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        user_id: int = payload.get('id')
+        user_role: str = payload.get('role')
+        
+        if username is None or user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Could not validate user.'
+            )
+            
+        # Get fresh user data from database
+        user = db.query(Users).filter(Users.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='User not found.'
+            )
+            
+        return {
+            'username': username,
+            'id': user_id,
+            'role': user_role,
+            'is_active': bool(user.is_active)  # Convert SQLite 0/1 to boolean
+        }
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate user.'
+        )

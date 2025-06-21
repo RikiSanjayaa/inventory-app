@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin_page.dart';
 import 'package:frontend/screens/items_page.dart';
 import 'package:frontend/screens/stockmovement_page.dart';
+import 'package:frontend/screens/user_management_page.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,13 +22,15 @@ class _PageManagerState extends State<PageManager> {
   final List<String> _pageTitles = [
     'Items Management',
     'Stock Movements',
-    'Admin Settings'
+    'Admin Settings',
+    'User Management',
   ];
 
   final List<Widget> _pages = [
     const ItemsPage(),
     const StockMovementsPage(),
     const AdminPage(),
+    const UserManagementPage(),
   ];
 
   @override
@@ -152,6 +155,24 @@ class _PageManagerState extends State<PageManager> {
                 onTap: () {
                   Navigator.pop(context);
                   setState(() => _selectedPage = 2);
+                },
+              ),
+            if (isAdmin)
+              ListTile(
+                selected: _selectedPage == 3,
+                selectedTileColor: Colors.grey,
+                title: Text(
+                  'User Management',
+                  style: TextStyle(
+                    fontWeight: _selectedPage == 3
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: _selectedPage == 3 ? Colors.black : Colors.grey,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _selectedPage = 3);
                 },
               ),
           ],

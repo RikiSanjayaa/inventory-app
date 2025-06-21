@@ -25,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (response.statusCode == 201) {
-      if (mounted) Navigator.pushReplacementNamed(context, '/');
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
     } else {
       setState(() => error = 'Registration failed');
     }
@@ -48,7 +48,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: true),
             ElevatedButton(onPressed: register, child: const Text('Register')),
             TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/dashboard'),
                 child: const Text('Already have an account? Login')),
             if (error.isNotEmpty)
               Text(error, style: const TextStyle(color: Colors.red)),
