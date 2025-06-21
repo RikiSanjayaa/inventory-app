@@ -36,7 +36,7 @@ class DataTableWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: LayoutBuilder(builder: (context, constraints) {
-            if (constraints.maxWidth > 600) {
+            if (constraints.maxWidth > 750) {
               // Desktop layout - horizontal filters
               return Row(
                 children: [

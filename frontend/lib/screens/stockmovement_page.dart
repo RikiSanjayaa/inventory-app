@@ -81,7 +81,6 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
     super.initState();
     fetchItems();
     fetchDropdownOptions();
-    // TODO: delete stock movement
   }
 
   Future<void> fetchItems() async {
@@ -197,7 +196,6 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
                         'user_id': userId,
                         'timestamp': DateTime.now().toIso8601String(),
                       };
-                      print(completeFormData);
 
                       final token = await AuthService.getToken();
                       final response = await http.post(
@@ -279,7 +277,7 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ),
         DataColumn(
-          label: Text('User',
+          label: Text('CreatedBy',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ),
         DataColumn(

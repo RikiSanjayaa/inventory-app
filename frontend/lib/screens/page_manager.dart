@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/admin_page.dart';
 import 'package:frontend/screens/items_page.dart';
 import 'package:frontend/screens/stockmovement_page.dart';
 import 'package:frontend/services/auth_service.dart';
+import 'package:http/http.dart' as http;
 
 class PageManager extends StatefulWidget {
   const PageManager({super.key});
@@ -12,18 +16,40 @@ class PageManager extends StatefulWidget {
 
 class _PageManagerState extends State<PageManager> {
   int _selectedPage = 0;
+  bool isAdmin = false;
 
   final List<String> _pageTitles = [
     'Items Management',
     'Stock Movements',
+    'Admin Settings'
   ];
 
   final List<Widget> _pages = [
     const ItemsPage(),
     const StockMovementsPage(),
-    // TODO: Users page
-    // TODO: Admin page (to create categories and suppliers)
+    const AdminPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    checkUserRole();
+  }
+
+  Future<void> checkUserRole() async {
+    final token = await AuthService.getToken();
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/user'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final userData = jsonDecode(response.body);
+      setState(() {
+        isAdmin = userData['User']['role'] == 'admin';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +136,24 @@ class _PageManagerState extends State<PageManager> {
                   Navigator.pop(context);
                   setState(() => _selectedPage = 1);
                 }),
+            if (isAdmin)
+              ListTile(
+                selected: _selectedPage == 2,
+                selectedTileColor: Colors.grey,
+                title: Text(
+                  'Admin Settings',
+                  style: TextStyle(
+                    fontWeight: _selectedPage == 2
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: _selectedPage == 2 ? Colors.black : Colors.grey,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _selectedPage = 2);
+                },
+              ),
           ],
         ),
       ),

@@ -35,7 +35,6 @@ async def get_stock_entries(db: Session = db_dependency, user: dict = user_depen
     return stocks
 
 @router.post("/", response_model=StockCreate, status_code=status.HTTP_201_CREATED)
-@check_role([Role.ADMIN])
 async def create_stock_entry(stock: StockCreate, db: Session = db_dependency, user: dict = user_dependency):
     new_stock = StockModel(**stock.model_dump())
     db.add(new_stock)
@@ -50,7 +49,7 @@ async def get_stock_entry(stock_id: int, db: Session = db_dependency, user: dict
         raise HTTPException(status_code=404, detail="Stock entry not found")
     return stock
 
-@router.put("/{stock_id}", response_model=StockOut)
+@router.put("/{stock_id}", response_model=StockCreate)
 @check_role([Role.ADMIN])
 async def update_stock_entry(stock_id: int, stock: StockCreate, db: Session = db_dependency, user: dict = user_dependency):
     db_stock = db.query(StockModel).filter(StockModel.id == stock_id).first()
