@@ -23,6 +23,8 @@ async def get_items(db: Session = db_dependency, user: dict = user_dependency):
         ItemModel.description,
         ItemModel.quantity,
         ItemModel.price,
+        ItemModel.category_id,
+        ItemModel.supplier_id,
         CategoryModel.name.label("category_name"),
         SupplierModel.name.label("supplier_name"),
     ).join(

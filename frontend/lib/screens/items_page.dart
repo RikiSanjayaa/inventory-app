@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/widgets/edit_item.dart';
+import 'package:frontend/widgets/filter.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/items.dart';
 
@@ -20,8 +22,8 @@ class _ItemsPageState extends State<ItemsPage> {
   List<Item> allItems = [];
   List<Item> filteredItems = [];
 
-  List<String> categories = [];
-  List<String> suppliers = [];
+  List<Map<String, dynamic>> categories = [];
+  List<Map<String, dynamic>> suppliers = [];
 
   String? selectedCategory;
   String? selectedSupplier;
@@ -61,8 +63,18 @@ class _ItemsPageState extends State<ItemsPage> {
       final List<dynamic> catJson = jsonDecode(catResponse.body);
       final List<dynamic> supJson = jsonDecode(supResponse.body);
       setState(() {
-        categories = catJson.map((cat) => cat['name'].toString()).toList();
-        suppliers = supJson.map((sup) => sup['name'].toString()).toList();
+        categories = catJson
+            .map((cat) => {
+                  'id': cat['id'],
+                  'name': cat['name'],
+                })
+            .toList();
+        suppliers = supJson
+            .map((sup) => {
+                  'id': sup['id'],
+                  'name': sup['name'],
+                })
+            .toList();
       });
     }
   }
@@ -104,15 +116,10 @@ class _ItemsPageState extends State<ItemsPage> {
               const Text("Filters:",
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(width: 60),
-              DropdownButton<String>(
-                hint: const Text("Filter by Category"),
+              FilterDropdown(
+                hint: "Category",
                 value: selectedCategory,
-                items: [
-                  const DropdownMenuItem(
-                      value: null, child: Text("All Categories")),
-                  ...categories.map(
-                      (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                ],
+                items: categories,
                 onChanged: (value) {
                   setState(() {
                     selectedCategory = value;
@@ -121,15 +128,10 @@ class _ItemsPageState extends State<ItemsPage> {
                 },
               ),
               const SizedBox(width: 16),
-              DropdownButton<String>(
-                hint: const Text("Filter by Supplier"),
+              FilterDropdown(
+                hint: "Supplier",
                 value: selectedSupplier,
-                items: [
-                  const DropdownMenuItem(
-                      value: null, child: Text("All Suppliers")),
-                  ...suppliers.map(
-                      (sup) => DropdownMenuItem(value: sup, child: Text(sup)))
-                ],
+                items: suppliers,
                 onChanged: (value) {
                   setState(() {
                     selectedSupplier = value;
@@ -204,19 +206,11 @@ class _ItemsPageState extends State<ItemsPage> {
                       DataCell(Text('\$${item.price}')),
                       DataCell(Text(item.categoryName)),
                       DataCell(Text(item.supplierName)),
-                      DataCell(Row(
-                        children: [
-                          IconButton(
-                              onPressed: () {
-                                // TODO: Edit item functionality
-                              },
-                              icon: const Icon(Icons.edit)),
-                          IconButton(
-                              onPressed: () {
-                                // TODO: Delete item functionality (admin only)
-                              },
-                              icon: const Icon(Icons.delete)),
-                        ],
+                      DataCell(EditItemBtn(
+                        item: item,
+                        fetchItems: fetchItems,
+                        categories: categories,
+                        suppliers: suppliers,
                       )),
                     ],
                   );

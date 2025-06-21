@@ -10,7 +10,9 @@ def check_role(allowed_roles: list[Role]):
   def decorator(func):
     @wraps(func)
     async def wrapper(*args, user: user_dependency, **kwargs):
-      if user['role'] not in [role.value for role in allowed_roles]:
+      if Role[user['role']] not in [role.value for role in allowed_roles]:
+        print(user['role'])
+        print('allowed role: ', [role.value for role in allowed_roles])
         raise HTTPException(
           status_code=status.HTTP_403_FORBIDDEN, detail="Operation not permitted"
         )

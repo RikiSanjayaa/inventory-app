@@ -21,6 +21,8 @@ class ItemJoinedOut(BaseModel):
     description: str
     quantity: int
     price: float
+    category_id: int
+    supplier_id: int
     category_name: str
     supplier_name: str
     
