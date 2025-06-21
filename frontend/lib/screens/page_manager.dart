@@ -13,6 +13,11 @@ class PageManager extends StatefulWidget {
 class _PageManagerState extends State<PageManager> {
   int _selectedPage = 0;
 
+  final List<String> _pageTitles = [
+    'Items Management',
+    'Stock Movements',
+  ];
+
   final List<Widget> _pages = [
     const ItemsPage(),
     const StockMovementsPage(),
@@ -24,7 +29,7 @@ class _PageManagerState extends State<PageManager> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventory Management'),
+        title: Text(_pageTitles[_selectedPage]),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

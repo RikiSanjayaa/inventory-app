@@ -34,7 +34,7 @@ async def get_stock_entries(db: Session = db_dependency, user: dict = user_depen
     
     return stocks
 
-@router.post("/", response_model=StockOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=StockCreate, status_code=status.HTTP_201_CREATED)
 @check_role([Role.ADMIN])
 async def create_stock_entry(stock: StockCreate, db: Session = db_dependency, user: dict = user_dependency):
     new_stock = StockModel(**stock.model_dump())

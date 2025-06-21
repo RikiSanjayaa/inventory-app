@@ -10,6 +10,8 @@ class DataTableWidget extends StatelessWidget {
   final int? sortColumnIndex;
   final bool? sortAscending;
   final Function(int, bool) onSort;
+  final String addButtonLabel;
+  final VoidCallback onAdd;
 
   const DataTableWidget({
     super.key,
@@ -21,6 +23,8 @@ class DataTableWidget extends StatelessWidget {
     required this.sortColumnIndex,
     required this.sortAscending,
     required this.onSort,
+    required this.addButtonLabel,
+    required this.onAdd,
   });
 
   @override
@@ -57,6 +61,12 @@ class DataTableWidget extends StatelessWidget {
                       return filter['widget'];
                     }
                   }),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: onAdd,
+                    label: Text(addButtonLabel),
+                    icon: const Icon(Icons.add),
+                  )
                 ],
               );
             } else {
@@ -64,8 +74,18 @@ class DataTableWidget extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Filters:",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Filters:",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      ElevatedButton.icon(
+                        onPressed: onAdd,
+                        label: Text(addButtonLabel),
+                        icon: const Icon(Icons.add),
+                      )
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   ...filters.map((filter) {
                     if (filter['type'] == 'dropdown') {

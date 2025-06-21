@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/widgets/data_table_widget.dart';
 import 'package:frontend/widgets/edit_item.dart';
+import 'package:frontend/widgets/item_form.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/items.dart';
 
@@ -96,7 +97,6 @@ class _ItemsPageState extends State<ItemsPage> {
     super.initState();
     fetchDropdownOptions();
     fetchItems();
-    // TODO: create item button
   }
 
   int _compareString(bool ascending, String value1, String value2) =>
@@ -137,6 +137,55 @@ class _ItemsPageState extends State<ItemsPage> {
           }
           _applyFilters();
         });
+      },
+      addButtonLabel: 'Add Item',
+      onAdd: () {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 400,
+                  child: ItemForm(
+                      onSubmit: (formData) async {
+                        final token = await AuthService.getToken();
+                        final response = await http.post(
+                            Uri.parse('http://127.0.0.1:8000/items/'),
+                            headers: {
+                              'Authorization': 'Bearer $token',
+                              'Content-Type': 'application/json',
+                            },
+                            body: jsonEncode(formData));
+
+                        if (response.statusCode == 201) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Item created successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            Navigator.pop(context);
+                            fetchItems();
+                          }
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Failed to create item: ${response.statusCode}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      categories: categories,
+                      suppliers: suppliers),
+                ),
+              );
+            });
       },
       sortColumnIndex: _sortColumnIndex,
       sortAscending: _isAscending,

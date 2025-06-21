@@ -4,6 +4,7 @@ import 'package:frontend/models/stocks.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/widgets/data_table_widget.dart';
 import 'package:frontend/widgets/edit_stock.dart';
+import 'package:frontend/widgets/stock_form.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -80,7 +81,7 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
     super.initState();
     fetchItems();
     fetchDropdownOptions();
-    // TODO: create stock movement, delete stock movement
+    // TODO: delete stock movement
   }
 
   Future<void> fetchItems() async {
@@ -101,6 +102,19 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
     } else {
       throw Exception('Failed to load items: ${response.statusCode}');
     }
+  }
+
+  Future<int?> getCurrentUserId() async {
+    final token = await AuthService.getToken();
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/user'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final userData = jsonDecode(response.body);
+      return userData['User']['id'];
+    }
+    return null;
   }
 
   int _compareString(bool ascending, String value1, String value2) =>
@@ -152,6 +166,77 @@ class _StockMovementsPageState extends State<StockMovementsPage> {
       selectedFilters: {
         'item': selectedItem,
         'user': selectedUser,
+      },
+      addButtonLabel: 'Add Stock Movement',
+      onAdd: () {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  width: 400,
+                  child: StockForm(
+                    items: items,
+                    onSubmit: (formData) async {
+                      final userId = await getCurrentUserId();
+                      if (userId == null) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Failed to get user information'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      final completeFormData = {
+                        ...formData,
+                        'user_id': userId,
+                        'timestamp': DateTime.now().toIso8601String(),
+                      };
+                      print(completeFormData);
+
+                      final token = await AuthService.getToken();
+                      final response = await http.post(
+                        Uri.parse('http://127.0.0.1:8000/stock/'),
+                        headers: {
+                          'Authorization': 'Bearer $token',
+                          'Content-Type': 'application/json',
+                        },
+                        body: jsonEncode(completeFormData),
+                      );
+
+                      if (response.statusCode == 201) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Stock movement created successfully'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          Navigator.pop(context);
+                          fetchItems();
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Failed to create stock movement: ${response.statusCode}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ),
+              );
+            });
       },
       onFilterChanged: (key, value) {
         setState(() {
